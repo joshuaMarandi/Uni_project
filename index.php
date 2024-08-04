@@ -101,7 +101,7 @@
         </section>
 
         <div class="button-container">
-            <a href="login_form.php" class="btn">Get Started</a>
+            <a href="supervisor_dashboard.php" class="btn">Get Started</a>
         </div>
     </div>
 </body>
