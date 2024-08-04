@@ -251,8 +251,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_id'])) {
 </head>
 <body>
 <div class="navbar">
-    <a href="coordinators_dashboard.php">Home</a>
-    <a href="supervisors.php">Supervisors</a>
+    <a href="index.php">Home</a>
+    <a href="coordinator_dashboard.php">Supervisors</a>
     <a href="report.php">Report</a>
     <div class="popup-menu">
         <span>Menu</span>
