@@ -1,0 +1,21 @@
+8W99CCQ2TMMR3NPXLJL76D5S
+
+SID:   AC58cbd1b072d11bedae1012d2efd96f40
+
+Token : a74bb2a926c3a6c28184f7d599f49fde
+
+
+number:  +19388677884
+
+
+
+
+
+
+curl 'https://api.twilio.com/2010-04-01/Accounts/AC58cbd1b072d11bedae1012d2efd96f40/Messages.json' -X POST \
+--data-urlencode 'To=+255748415599' \
+--data-urlencode 'From=+19388677884' \
+-u AC58cbd1b072d11bedae1012d2efd96f40:[AuthToken]
+
+
+

@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Retrieve form data
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
+    $phone_number = trim($_POST['Phone_number']);
 
     // Validate input
     if (empty($username) || empty($password)) {
@@ -24,8 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
         // Prepare and execute the SQL statement
-        $stmt = $conn->prepare("INSERT INTO users (username, password, role, added_by_coordinator_id) VALUES (?, ?, 'supervisor', ?)");
-        $stmt->bind_param('ssi', $username, $hashed_password, $coordinator_id);
+        $stmt = $conn->prepare("INSERT INTO users (username, password, role, added_by_coordinator_id,phone) VALUES (?, ?, 'supervisor', ?)");
+        $stmt->bind_param('ssi', $username, $hashed_password, $coordinator_id, $phone_number);
 
         if ($stmt->execute()) {
             echo '<p>Supervisor added successfully.</p>';
@@ -46,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Add Supervisor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Basic Reset */
-        body, h1, p, form, a {
+         /* Basic Reset */
+         body, h1, p, form, a {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -193,8 +194,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="navbar">
-        <a href="index.php">Home</a>
-        <a href="coordinator_dashboard.php">Supervisors</a>
+        <a href="coordinators_dashboard.php">Home</a>
+        <a href="supervisors.php">Supervisors</a>
         <div class="popup-menu">
             <span>Menu</span>
             <div class="popup-content">
@@ -207,19 +208,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="container">
         <h1>Add Supervisor</h1>
-        <form method="POST" action="">
+        <form method="POST" action="send_sms.php">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required>
             <br>
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
             <br>
+            <label for="phone_number">Phone Number:</label>
+            <input type="text" id="phone_number" name="phone_number" required>
+            <br>
             <button type="submit">Add Supervisor</button>
         </form>
     </div>
 
-    <!-- <a href="supervisors.php" class="btn-back">
+    <a href="supervisors.php" class="btn-back">
         <i class="fas fa-chevron-left"></i> Back
-    </a> -->
+    </a>
 </body>
 </html>
+
