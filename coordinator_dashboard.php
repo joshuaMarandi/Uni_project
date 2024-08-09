@@ -354,8 +354,8 @@ $conn->close();
 </div>
     <!-- Add canvas element for the chart -->
     <div class="chart-container">
+    <h1 style="text-align: center;">The notification charts</h1>
         <canvas id="studentStatusChart"></canvas>
-        <h1>The notification charts</h1>
     </div>
 </div>
 
