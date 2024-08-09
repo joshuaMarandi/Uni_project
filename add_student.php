@@ -2,6 +2,7 @@
 session_start();
 require 'db/database.php';
 
+// Check if the session is set and role is coordinator
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'coordinator') {
     header('Location: login_form.php');
     exit();
@@ -25,18 +26,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
         // Hash the password before storing it
         $hashed_password = password_hash($password, PASSWORD_BCRYPT);
 
-        // Insert the student into the students table with the selected supervisor
+        // Prepare and execute the SQL statement
         $stmt = $conn->prepare("INSERT INTO students (reg_no, name, program, supervisor_id, password) VALUES (?, ?, ?, ?, ?)");
-        if ($stmt) {
+        if ($stmt === false) {
+            echo "Failed to prepare statement: " . htmlspecialchars($conn->error);
+        } else {
             $stmt->bind_param('sssis', $student_reg_no, $student_name, $student_program, $supervisor_id, $hashed_password);
             if ($stmt->execute()) {
                 echo "<p>Student added successfully.</p>";
             } else {
-                echo "<p>Failed to add student: " . htmlspecialchars($conn->error) . "</p>";
+                echo "<p>Failed to add student: " . htmlspecialchars($stmt->error) . "</p>";
             }
             $stmt->close();
-        } else {
-            echo "<p>Failed to prepare statement: " . htmlspecialchars($conn->error) . "</p>";
         }
     }
 }
