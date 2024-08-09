@@ -18,15 +18,15 @@ $supervisor_result = $supervisors->get_result();
 // Add student to supervisor
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
     // Sanitize and validate input data
-    $student_reg_no = filter_var(trim($_POST['student_reg_no']), FILTER_SANITIZE_STRING);
-    $student_name = filter_var(trim($_POST['student_name']), FILTER_SANITIZE_STRING);
-    $student_program = filter_var(trim($_POST['student_program']), FILTER_SANITIZE_STRING);
-    $student_phone_no = filter_var(trim($_POST['phone_no']), FILTER_SANITIZE_STRING);
-    $student_project_title = filter_var(trim($_POST['project_title']), FILTER_SANITIZE_STRING);
-    $student_academic_year = filter_var(trim($_POST['academic_year']), FILTER_SANITIZE_STRING);
-    $student_progress = filter_var(trim($_POST['progress']), FILTER_SANITIZE_STRING);
-    $supervisor_id = filter_var($_POST['supervisor_id'], FILTER_VALIDATE_INT);
-    $password = filter_var(trim($_POST['password']), FILTER_SANITIZE_STRING);
+    $student_reg_no = filter_var(trim($_POST['student_reg_no']) );
+    $student_name = filter_var(trim($_POST['student_name']));
+    $student_program = filter_var(trim($_POST['student_program']));
+    $student_phone_no = filter_var(trim($_POST['phone_no']), );
+    $student_project_title = filter_var(trim($_POST['project_title']));
+    $student_academic_year = filter_var(trim($_POST['academic_year']));
+    $student_progress = filter_var(trim($_POST['progress']));
+    $supervisor_id = filter_var($_POST['supervisor_id']);
+    $password = filter_var(trim($_POST['password']));
 
     if ($supervisor_id === false) {
         echo "Invalid supervisor selection.";
