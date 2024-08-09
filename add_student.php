@@ -8,8 +8,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'coordinator') {
     exit();
 }
 
-// Fetch all supervisors
-$supervisors = $conn->query("SELECT * FROM users WHERE role = 'supervisor'");
+// Fetch supervisors added by the current coordinator
+$coordinator_id = $_SESSION['user_id'];
+$supervisors = $conn->prepare("SELECT * FROM users WHERE role = 'supervisor' AND added_by_coordinator_id = ?");
+$supervisors->bind_param('i', $coordinator_id);
+$supervisors->execute();
+$supervisor_result = $supervisors->get_result();
 
 // Add student to supervisor
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
@@ -17,6 +21,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
     $student_reg_no = filter_var(trim($_POST['student_reg_no']), FILTER_SANITIZE_STRING);
     $student_name = filter_var(trim($_POST['student_name']), FILTER_SANITIZE_STRING);
     $student_program = filter_var(trim($_POST['student_program']), FILTER_SANITIZE_STRING);
+    $student_phone_no = filter_var(trim($_POST['phone_no']), FILTER_SANITIZE_STRING);
+    $student_project_title = filter_var(trim($_POST['project_title']), FILTER_SANITIZE_STRING);
+    $student_academic_year = filter_var(trim($_POST['academic_year']), FILTER_SANITIZE_STRING);
+    $student_progress = filter_var(trim($_POST['progress']), FILTER_SANITIZE_STRING);
     $supervisor_id = filter_var($_POST['supervisor_id'], FILTER_VALIDATE_INT);
     $password = filter_var(trim($_POST['password']), FILTER_SANITIZE_STRING);
 
@@ -27,11 +35,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
         $hashed_password = password_hash($password, PASSWORD_BCRYPT);
 
         // Prepare and execute the SQL statement
-        $stmt = $conn->prepare("INSERT INTO students (reg_no, name, program, supervisor_id, password) VALUES (?, ?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO students (reg_no, name, program, phone_no, project_title, academic_year, supervisor_id, progress, status, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)");
         if ($stmt === false) {
             echo "Failed to prepare statement: " . htmlspecialchars($conn->error);
         } else {
-            $stmt->bind_param('sssis', $student_reg_no, $student_name, $student_program, $supervisor_id, $hashed_password);
+            $stmt->bind_param('sssssssss', $student_reg_no, $student_name, $student_program, $student_phone_no, $student_project_title, $student_academic_year, $supervisor_id, $student_progress, $hashed_password);
             if ($stmt->execute()) {
                 echo "<p>Student added successfully.</p>";
             } else {
@@ -77,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
             font-weight: bold;
         }
 
-        input[type="text"], input[type="password"], select {
+        input[type="text"], input[type="password"], input[type="number"], select {
             width: 100%;
             padding: 8px;
             box-sizing: border-box;
@@ -121,13 +129,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
             <input type="text" id="student_program" name="student_program" required>
         </div>
         <div class="form-group">
+            <label for="phone_no">Phone Number:</label>
+            <input type="text" id="phone_no" name="phone_no" required>
+        </div>
+        <div class="form-group">
+            <label for="project_title">Project Title:</label>
+            <input type="text" id="project_title" name="project_title" required>
+        </div>
+        <div class="form-group">
+            <label for="academic_year">Academic Year:</label>
+            <input type="text" id="academic_year" name="academic_year" required>
+        </div>
+        <div class="form-group">
+            <label for="progress">Progress:</label>
+            <input type="text" id="progress" name="progress">
+        </div>
+        <div class="form-group">
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
         </div>
         <div class="form-group">
             <label for="supervisor_id">Supervisor:</label>
             <select id="supervisor_id" name="supervisor_id" required>
-                <?php while ($row = $supervisors->fetch_assoc()): ?>
+                <?php while ($row = $supervisor_result->fetch_assoc()): ?>
                     <option value="<?php echo htmlspecialchars($row['id']); ?>"><?php echo htmlspecialchars($row['username']); ?></option>
                 <?php endwhile; ?>
             </select>
