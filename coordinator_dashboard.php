@@ -61,6 +61,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_id'])) {
     header('Location: coordinator_dashboard.php');
     exit();
 }
+
+// Initialize counts
+$pendingCount = 0;
+$approvedCount = 0;
+$verifiedCount = 0;
+
+// Fetch counts of students by status
+$sql = "SELECT status, COUNT(*) as count FROM students GROUP BY status";
+$result = $conn->query($sql);
+
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        switch ($row['status']) {
+            case 'pending':
+                $pendingCount = $row['count'];
+                break;
+            case 'approved':
+                $approvedCount = $row['count'];
+                break;
+            case 'verified':
+                $verifiedCount = $row['count'];
+                break;
+        }
+    }
+}
+
+$conn->close();
+
 ?>
 
 <!DOCTYPE html>
@@ -70,6 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <title>Coordinator Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -247,6 +276,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_id'])) {
                 font-size: 18px;
             }
         }
+        .chart-container {
+        position: relative;
+        margin: auto;
+        height: 400px;
+        width: 80%;
+    }
     </style>
 </head>
 <body>
@@ -267,8 +302,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_id'])) {
 
 <div class="container">
     <h1>Coordinator Dashboard</h1>
-
-    <?php
+    
+    <!-- Existing dashboard content -->
+<?php
     if (!empty($supervisors)) {
         foreach ($supervisors as $supervisor_name => $students): ?>
             <h2>Supervisor: <?php echo htmlspecialchars($supervisor_name); ?></h2>
@@ -316,5 +352,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_id'])) {
     }
     ?>
 </div>
+    <!-- Add canvas element for the chart -->
+    <div class="chart-container">
+        <canvas id="studentStatusChart"></canvas>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var ctx = document.getElementById('studentStatusChart').getContext('2d');
+        
+        // Replace these values with PHP variables if needed
+        var pendingCount = <?php echo json_encode($pendingCount); ?>;
+        var approvedCount = <?php echo json_encode($approvedCount); ?>;
+        var verifiedCount = <?php echo json_encode($verifiedCount); ?>;
+        
+        new Chart(ctx, {
+            type: 'bar', // You can also use 'pie', 'line', etc.
+            data: {
+                labels: ['Pending', 'Approved', 'Verified'],
+                datasets: [{
+                    label: 'Number of Students',
+                    data: [pendingCount, approvedCount, verifiedCount],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(75, 192, 192, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(75, 192, 192, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+</script>
 </body>
 </html>
