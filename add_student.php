@@ -17,14 +17,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
     $student_name = filter_var(trim($_POST['student_name']), FILTER_SANITIZE_STRING);
     $student_program = filter_var(trim($_POST['student_program']), FILTER_SANITIZE_STRING);
     $supervisor_id = filter_var($_POST['supervisor_id'], FILTER_VALIDATE_INT);
+    $password = filter_var(trim($_POST['password']), FILTER_SANITIZE_STRING);
+
 
     if ($supervisor_id === false) {
         echo "Invalid supervisor selection.";
     } else {
         // Insert the student into the students table with the selected supervisor
-        $stmt = $conn->prepare("INSERT INTO students (reg_no, name, program, supervisor_id) VALUES (?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO students (reg_no, name, program, supervisor_id, password) VALUES (?, ?, ?, ?)");
         if ($stmt) {
-            $stmt->bind_param('sssi', $student_reg_no, $student_name, $student_program, $supervisor_id);
+            $stmt->bind_param('sssi', $student_reg_no, $student_name, $student_program, $supervisor_id, $password);
             if ($stmt->execute()) {
                 echo "<p>Student added successfully.</p>";
             } else {
@@ -114,6 +116,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
         <div class="form-group">
             <label for="student_program">Student Program:</label>
             <input type="text" id="student_program" name="student_program" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
         </div>
         <div class="form-group">
             <label for="supervisor_id">Supervisor:</label>
