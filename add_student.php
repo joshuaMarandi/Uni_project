@@ -1,7 +1,7 @@
 <?php
-include 'db/database.php';
-
 session_start();
+require 'db/database.php';
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'coordinator') {
     header('Location: login_form.php');
     exit();
@@ -19,14 +19,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
     $supervisor_id = filter_var($_POST['supervisor_id'], FILTER_VALIDATE_INT);
     $password = filter_var(trim($_POST['password']), FILTER_SANITIZE_STRING);
 
-
     if ($supervisor_id === false) {
         echo "Invalid supervisor selection.";
     } else {
+        // Hash the password before storing it
+        $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+
         // Insert the student into the students table with the selected supervisor
-        $stmt = $conn->prepare("INSERT INTO students (reg_no, name, program, supervisor_id, password) VALUES (?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO students (reg_no, name, program, supervisor_id, password) VALUES (?, ?, ?, ?, ?)");
         if ($stmt) {
-            $stmt->bind_param('sssi', $student_reg_no, $student_name, $student_program, $supervisor_id, $password);
+            $stmt->bind_param('sssis', $student_reg_no, $student_name, $student_program, $supervisor_id, $hashed_password);
             if ($stmt->execute()) {
                 echo "<p>Student added successfully.</p>";
             } else {
@@ -74,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
             font-weight: bold;
         }
 
-        input[type="text"], select {
+        input[type="text"], input[type="password"], select {
             width: 100%;
             padding: 8px;
             box-sizing: border-box;
@@ -118,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
             <input type="text" id="student_program" name="student_program" required>
         </div>
         <div class="form-group">
-            <label for="password">Password</label>
+            <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
         </div>
         <div class="form-group">
