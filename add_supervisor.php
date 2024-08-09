@@ -222,9 +222,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
     </div>
 
-    <a href="supervisors.php" class="btn-back">
+    <!-- <a href="supervisors.php" class="btn-back">
         <i class="fas fa-chevron-left"></i> Back
-    </a>
+    </a> -->
 </body>
 </html>
 
