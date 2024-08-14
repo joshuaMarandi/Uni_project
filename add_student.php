@@ -1,53 +1,40 @@
 <?php
 session_start();
-require 'db/database.php';
+require 'db/database.php'; // Include your database connection
 
-// Check if the session is set and role is coordinator
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'coordinator') {
-    header('Location: login_form.php');
-    exit();
+// Check if user is logged in and has coordinator role
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'coordinator') {
+    die("Unauthorized access");
 }
 
-// Fetch supervisors added by the current coordinator
+// Get the coordinator's ID
 $coordinator_id = $_SESSION['user_id'];
-$supervisors = $conn->prepare("SELECT * FROM users WHERE role = 'supervisor' AND added_by_coordinator_id = ?");
-$supervisors->bind_param('i', $coordinator_id);
-$supervisors->execute();
-$supervisor_result = $supervisors->get_result();
 
-// Add student to supervisor
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
-    // Sanitize and validate input data
-    $student_reg_no = filter_var(trim($_POST['student_reg_no']) );
-    $student_name = filter_var(trim($_POST['student_name']));
-    $student_program = filter_var(trim($_POST['student_program']));
-    $student_phone_no = filter_var(trim($_POST['phone_no']), );
-    $student_project_title = filter_var(trim($_POST['project_title']));
-    $student_academic_year = filter_var(trim($_POST['academic_year']));
-    $student_progress = filter_var(trim($_POST['progress']));
-    $supervisor_id = filter_var($_POST['supervisor_id']);
-    $password = filter_var(trim($_POST['password']));
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $reg_no = $_POST['reg_no'];
+    $name = $_POST['name'];
+    $phone_no = $_POST['phone_no'];
+    $program = $_POST['program'];
+    $project_title = $_POST['project_title'];
+    $academic_year = $_POST['academic_year'];
+    $supervisor_id = $_POST['supervisor_id'];
+    $password = $_POST['password'];
 
-    if ($supervisor_id === false) {
-        echo "Invalid supervisor selection.";
+    // Hash the password
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+    // Insert new student into the students table
+    $stmt = $conn->prepare("INSERT INTO students (reg_no, name, phone_no, program, project_title, academic_year, supervisor_id, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssssis", $reg_no, $name, $phone_no, $program, $project_title, $academic_year, $supervisor_id, $hashed_password);
+
+    if ($stmt->execute()) {
+        echo "Student added successfully.";
     } else {
-        // Hash the password before storing it
-        $hashed_password = password_hash($password, PASSWORD_BCRYPT);
-
-        // Prepare and execute the SQL statement
-        $stmt = $conn->prepare("INSERT INTO students (reg_no, name, program, phone_no, project_title, academic_year, supervisor_id, progress, status, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)");
-        if ($stmt === false) {
-            echo "Failed to prepare statement: " . htmlspecialchars($conn->error);
-        } else {
-            $stmt->bind_param('sssssssss', $student_reg_no, $student_name, $student_program, $student_phone_no, $student_project_title, $student_academic_year, $supervisor_id, $student_progress, $hashed_password);
-            if ($stmt->execute()) {
-                echo "<p>Student added successfully.</p>";
-            } else {
-                echo "<p>Failed to add student: " . htmlspecialchars($stmt->error) . "</p>";
-            }
-            $stmt->close();
-        }
+        echo "Error adding student: " . $stmt->error;
     }
+
+    $stmt->close();
 }
 ?>
 
@@ -60,104 +47,97 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_student'])) {
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
+            margin: 20px;
             padding: 0;
-            box-sizing: border-box;
-            background-color: #f4f4f4;
         }
 
-        .container {
-            padding: 20px;
+        h1 {
+            text-align: center;
+        }
+
+        form {
             max-width: 600px;
-            margin: auto;
-            background-color: #fff;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .form-group {
-            margin-bottom: 15px;
+            background-color: #f9f9f9;
         }
 
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: bold;
         }
 
-        input[type="text"], input[type="password"], input[type="number"], select {
+        input[type="text"],
+        input[type="password"],
+        select {
             width: 100%;
             padding: 8px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
+            margin-bottom: 16px;
+            border: 1px solid #ddd;
             border-radius: 4px;
         }
 
-        button {
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
             padding: 10px 15px;
-            background-color: #007bff;
-            color: #fff;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
         }
 
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        p {
-            color: #333;
+        input[type="submit"]:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
-<div class="container">
     <h1>Add Student</h1>
-    <form method="POST" action="">
-        <div class="form-group">
-            <label for="student_reg_no">Student Registration Number:</label>
-            <input type="text" id="student_reg_no" name="student_reg_no" required>
-        </div>
-        <div class="form-group">
-            <label for="student_name">Student Name:</label>
-            <input type="text" id="student_name" name="student_name" required>
-        </div>
-        <div class="form-group">
-            <label for="student_program">Student Program:</label>
-            <input type="text" id="student_program" name="student_program" required>
-        </div>
-        <div class="form-group">
-            <label for="phone_no">Phone Number:</label>
-            <input type="text" id="phone_no" name="phone_no" required>
-        </div>
-        <div class="form-group">
-            <label for="project_title">Project Title:</label>
-            <input type="text" id="project_title" name="project_title" required>
-        </div>
-        <div class="form-group">
-            <label for="academic_year">Academic Year:</label>
-            <input type="text" id="academic_year" name="academic_year" required>
-        </div>
-        <div class="form-group">
-            <label for="progress">Progress:</label>
-            <input type="text" id="progress" name="progress">
-        </div>
-        <div class="form-group">
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
-        </div>
-        <div class="form-group">
-            <label for="supervisor_id">Supervisor:</label>
-            <select id="supervisor_id" name="supervisor_id" required>
-                <?php while ($row = $supervisor_result->fetch_assoc()): ?>
-                    <option value="<?php echo htmlspecialchars($row['id']); ?>"><?php echo htmlspecialchars($row['username']); ?></option>
-                <?php endwhile; ?>
-            </select>
-        </div>
-        <button type="submit" name="add_student">Add Student</button>
+    <form action="add_student.php" method="post">
+        <label for="reg_no">Registration Number:</label>
+        <input type="text" id="reg_no" name="reg_no" required>
+
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="phone_no">Phone Number:</label>
+        <input type="text" id="phone_no" name="phone_no" required>
+
+        <label for="program">Program:</label>
+        <input type="text" id="program" name="program" required>
+
+        <label for="project_title">Project Title:</label>
+        <input type="text" id="project_title" name="project_title" required>
+
+        <label for="academic_year">Academic Year:</label>
+        <input type="text" id="academic_year" name="academic_year" required>
+
+        <label for="supervisor">Supervisor:</label>
+        <select id="supervisor" name="supervisor_id" required>
+            <option value="">Select a supervisor</option>
+            <?php
+            // Fetch supervisors allocated by the specific coordinator
+            $stmt = $conn->prepare("SELECT id, username AS name FROM users WHERE role = 'supervisor' AND added_by_coordinator_id = ?");
+            $stmt->bind_param("i", $coordinator_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            // Generate the options for the supervisor dropdown
+            while ($row = $result->fetch_assoc()) {
+                echo "<option value=\"{$row['id']}\">{$row['name']}</option>";
+            }
+
+            $stmt->close();
+            ?>
+        </select>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+
+        <input type="submit" value="Add Student">
     </form>
-</div>
 </body>
 </html>

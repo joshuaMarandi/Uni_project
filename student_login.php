@@ -1,31 +1,45 @@
 <?php
 session_start();
-require 'db/database.php';
+require 'db/database.php'; // Include your database connection
+
+// Initialize error variable
+$error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $reg_no = $_POST['reg_no'];
     $password = $_POST['password'];
 
-    // Check credentials
-    $stmt = $conn->prepare("SELECT * FROM students WHERE reg_no = ?");
-    $stmt->bind_param('s', $reg_no);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // Check if the registration number and password are provided
+    if (!empty($reg_no) && !empty($password)) {
+        // Prepare and execute the query to check credentials
+        $stmt = $conn->prepare("SELECT * FROM students WHERE reg_no = ?");
+        $stmt->bind_param('s', $reg_no);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-    if ($result->num_rows > 0) {
-        $student = $result->fetch_assoc();
-        if (password_verify($password, $student['password'])) {
-            $_SESSION['student_id'] = $student['id'];
-            $_SESSION['reg_no'] = $student['reg_no'];
-            header('Location: student_panel.php');
-            exit();
+        if ($result->num_rows > 0) {
+            $student = $result->fetch_assoc();
+            // Verify the password
+            if (password_verify($password, $student['password'])) {
+                // Set session variables
+                $_SESSION['student_id'] = $student['id'];
+                $_SESSION['reg_no'] = $student['reg_no'];
+                // Redirect to the student panel
+                header('Location: student_panel.php');
+                exit();
+            } else {
+                $error = 'Invalid password';
+            }
         } else {
-            $error = 'Invalid password';
+            $error = 'Invalid registration number';
         }
+        $stmt->close();
     } else {
-        $error = 'Invalid registration number';
+        $error = 'Please enter both registration number and password';
     }
 }
+
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -114,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <button type="submit">Login</button>
         </form>
-        <?php if (isset($error)): ?>
+        <?php if ($error): ?>
             <p class="error"><?php echo htmlspecialchars($error); ?></p>
         <?php endif; ?>
     </div>

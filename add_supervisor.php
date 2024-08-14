@@ -1,10 +1,40 @@
-
-<?php include 'db/database.php';
-// include 'includes/header.php' ?>
-
 <?php
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'coordinator') {
+require 'db/database.php';
+require 'vendor/autoload.php'; // Path to the autoload file from Composer
+
+use Twilio\Rest\Client;
+
+// Twilio credentials
+$sid = 'AC58cbd1b072d11bedae1012d2efd96f40';
+$token = 'a74bb2a926c3a6c28184f7d599f49fde';
+$twilio_number = '+19388677884';
+
+// Create a Twilio client
+$client = new Client($sid, $token);
+
+function sendSMS($to, $message) {
+    global $client, $twilio_number;
+
+    try {
+        $client->messages->create(
+            $to,
+            [
+                'from' => $twilio_number,
+                'body' => $message
+            ]
+        );
+        return true;
+    } catch (\Twilio\Exceptions\RestException $e) {
+        error_log('Twilio RestException: ' . $e->getMessage());
+    } catch (\Exception $e) {
+        error_log('General Exception: ' . $e->getMessage());
+    }
+    return false;
+}
+
+// Check if user is logged in and has the coordinator role
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'coordinator') {
     header('Location: login_form.php');
     exit();
 }
@@ -15,30 +45,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Retrieve form data
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
-    $phone_number = trim($_POST['Phone_number']);
+    $phone_number = trim($_POST['phone_number']);
 
     // Validate input
-    if (empty($username) || empty($password)) {
+    if (empty($username) || empty($password) || empty($phone_number)) {
         echo '<p>Please fill in all fields.</p>';
     } else {
         // Hash the password
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
         // Prepare and execute the SQL statement
-        $stmt = $conn->prepare("INSERT INTO users (username, password, role, added_by_coordinator_id,phone) VALUES (?, ?, 'supervisor', ?)");
-        $stmt->bind_param('ssi', $username, $hashed_password, $coordinator_id, $phone_number);
+        $stmt = $conn->prepare("INSERT INTO users (username, password, role, added_by_coordinator_id, phone) VALUES (?, ?, 'supervisor', ?, ?)");
+        $stmt->bind_param('ssii', $username, $hashed_password, $coordinator_id, $phone_number);
 
         if ($stmt->execute()) {
-            echo '<p>Supervisor added successfully.</p>';
+            // Prepare the SMS message
+            $message = "Hello $username, you have been added as a supervisor and your login password is $password. Welcome!";
+
+            // Send SMS
+            if (sendSMS($phone_number, $message)) {
+                echo '<p>Supervisor added and SMS sent successfully.</p>';
+            } else {
+                echo '<p>Supervisor added but failed to send SMS.</p>';
+            }
         } else {
-            echo ('<p>Failed to add supervisor: ' ). $stmt->error . '</p>';
+            echo '<p>Failed to add supervisor: ' . $stmt->error . '</p>';
         }
 
         $stmt->close();
-        
     }
 }
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,8 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Add Supervisor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-         /* Basic Reset */
-         body, h1, p, form, a {
+        /* Basic Reset */
+        body, h1, p, form, a {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -208,7 +247,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="container">
         <h1>Add Supervisor</h1>
-        <form method="POST" action="send_sms.php">
+        <form method="POST" action="add_supervisor.php">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+            <br>
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required>
             <br>
@@ -220,11 +262,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <br>
             <button type="submit">Add Supervisor</button>
         </form>
+        <a href="supervisors.php" class="btn-back">
+            <i class="fas fa-chevron-left"></i> Back
+        </a>
     </div>
-
-    <!-- <a href="supervisors.php" class="btn-back">
-        <i class="fas fa-chevron-left"></i> Back
-    </a> -->
 </body>
 </html>
-

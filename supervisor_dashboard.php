@@ -194,7 +194,7 @@ if (isset($_GET['approve_id'])) {
 <body>
 <div class="container">
     <h1>Supervisor Dashboard</h1>
-
+<a href="chat_list.php" class="btn green">Chat here</a>
     <h2>Student Assessment</h2>
     <table>
         <thead>

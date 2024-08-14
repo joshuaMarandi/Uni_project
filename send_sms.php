@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // $stmt->execute();
     // $stmt->close();
 
-    $message = "Hello $username, you have been added as a supervisor. Welcome!";
+    $message = "Hello $username, you have been added as a supervisor and your login password is $password. Welcome!";
     if (sendSMS($phoneNumber, $message)) {
         echo 'Supervisor added and SMS sent successfully.';
     } else {

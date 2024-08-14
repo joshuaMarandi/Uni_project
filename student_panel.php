@@ -9,19 +9,18 @@ if (!isset($_SESSION['student_id'])) {
 
 $student_id = $_SESSION['student_id'];
 
-// Fetch student details
+// Fetch student details and supervisor information
 $stmt = $conn->prepare("
-    SELECT s.*, su.name AS supervisor_name, c.name AS coordinator_name
+    SELECT s.*, su.name AS supervisor_name, su.phone AS supervisor_phone
     FROM students s
     JOIN users su ON s.supervisor_id = su.id
-    JOIN users c ON s.coordinator_id = c.id
     WHERE s.id = ?
 ");
 $stmt->bind_param('i', $student_id);
 $stmt->execute();
 $student = $stmt->get_result()->fetch_assoc();
 
-// Fetch chat messages
+// Fetch chat messages (optional for this page)
 $messages_stmt = $conn->prepare("
     SELECT m.*, u1.name AS student_name, u2.name AS supervisor_name
     FROM messages m
@@ -44,64 +43,78 @@ $messages = $messages_stmt->get_result();
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
         }
-        #chat-box {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-bottom: 10px;
-            max-height: 300px;
-            overflow-y: scroll;
+
+        .container {
+            width: 80%;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        .message {
-            margin-bottom: 10px;
-        }
-        .message strong {
+
+        h1 {
             color: #007bff;
+            margin-bottom: 20px;
         }
-        textarea {
-            width: 100%;
-            height: 100px;
-            margin-bottom: 10px;
+
+        h2 {
+            color: #333;
+            margin-top: 0;
         }
-        button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px;
-            border: none;
+
+        p {
+            font-size: 16px;
+            color: #555;
+            margin: 10px 0;
+        }
+
+        .button-container {
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            text-decoration: none;
+            padding: 10px 20px;
+            font-size: 16px;
             border-radius: 5px;
-            cursor: pointer;
+            color: white;
+            background-color: #007bff;
+            transition: background-color 0.3s;
         }
-        button:hover {
+
+        .btn:hover {
             background-color: #0056b3;
+        }
+
+        .grey {
+            background-color: #6c757d;
+        }
+
+        .grey:hover {
+            background-color: #5a6268;
         }
     </style>
 </head>
 <body>
-    <h1>Welcome, <?php echo htmlspecialchars($student['name']); ?></h1>
-
-    <h2>Details</h2>
-    <p>Program: <?php echo htmlspecialchars($student['program']); ?></p>
-    <p>Project Title: <?php echo htmlspecialchars($student['project_title']); ?></p>
-    <p>Academic Year: <?php echo htmlspecialchars($student['academic_year']); ?></p>
-    <p>Status: <?php echo htmlspecialchars($student['status']); ?></p>
-    <p>Supervisor: <?php echo htmlspecialchars($student['supervisor_name']); ?></p>
-    <p>Coordinator: <?php echo htmlspecialchars($student['coordinator_name']); ?></p>
-
-    <h2>Chat with Supervisor</h2>
-    <div id="chat-box">
-        <?php while ($msg = $messages->fetch_assoc()): ?>
-            <div class="message">
-                <strong><?php echo htmlspecialchars($msg['student_name'] === $student['name'] ? 'You' : 'Supervisor'); ?>:</strong>
-                <p><?php echo htmlspecialchars($msg['message']); ?></p>
-                <small><?php echo htmlspecialchars($msg['created_at']); ?></small>
-            </div>
-        <?php endwhile; ?>
+    <div class="container">
+        <h1>Welcome, <?php echo htmlspecialchars($student['name']); ?></h1>
+        <div class="button-container">
+            <a href="student_chat.php" class="btn grey">Chat Here</a>
+        </div>
+        <h2>Details</h2>
+        <p><strong>Program:</strong> <?php echo htmlspecialchars($student['program']); ?></p>
+        <p><strong>Project Title:</strong> <?php echo htmlspecialchars($student['project_title']); ?></p>
+        <p><strong>Academic Year:</strong> <?php echo htmlspecialchars($student['academic_year']); ?></p>
+        <p><strong>Status:</strong> <?php echo htmlspecialchars($student['status']); ?></p>
+        <p><strong>Supervisor:</strong> <?php echo htmlspecialchars($student['supervisor_name']); ?></p>
+        <p><strong>Supervisor Phone:</strong> <?php echo htmlspecialchars($student['supervisor_phone']); ?></p>
     </div>
-
-    <form method="POST" action="send_message.php">
-        <textarea name="message" required></textarea>
-        <input type="hidden" name="supervisor_id" value="<?php echo htmlspecialchars($student['supervisor_id']); ?>">
-        <button type="submit">Send</button>
-    </form>
 </body>
 </html>
