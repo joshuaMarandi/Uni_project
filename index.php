@@ -77,3 +77,14 @@ session_start();
     </div>
 </body>
 </html>
+
+-- Disable foreign key checks
+SET foreign_key_checks = 0;
+
+-- Truncate tables
+
+TRUNCATE TABLE supervisor_comments;
+
+-- Enable foreign key checks
+SET foreign_key_checks = 1;
+

@@ -25,13 +25,12 @@ function sendSMS($to, $message) {
             ]
         );
         return true;
-    } catch (\Twilio\Exceptions\RestException $e) {
-        error_log('Twilio RestException: ' . $e->getMessage());
-    } catch (\Exception $e) {
-        error_log('General Exception: ' . $e->getMessage());
+    } catch (Exception $e) {
+        error_log('Error sending SMS: ' . $e->getMessage());
+        return false;
     }
-    return false;
 }
+
 
 // Check if user is logged in and has the coordinator role
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'coordinator') {
@@ -262,9 +261,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <br>
             <button type="submit">Add Supervisor</button>
         </form>
-        <a href="supervisors.php" class="btn-back">
-            <i class="fas fa-chevron-left"></i> Back
-        </a>
     </div>
 </body>
 </html>
