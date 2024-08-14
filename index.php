@@ -73,7 +73,7 @@ session_start();
         <h1>Welcome to the University Project Management System</h1>
         <p>Please select your role to proceed:</p>
         <a href="student_login.php" class="btn">Student</a>
-        <a href="login.php" class="btn btn-coordinator">Coordinator or Supervisor</a>
+        <a href="login_form.php" class="btn btn-coordinator">Coordinator or Supervisor</a>
     </div>
 </body>
 </html>
