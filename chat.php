@@ -223,3 +223,85 @@ if (isset($_GET['student_id'])) {
     </script>
 </body>
 </html>
+
+
+
+
+
+<?php
+session_start();
+require 'db/database.php';
+require 'vendor/autoload.php'; // Path to the autoload file from Composer
+
+use Twilio\Rest\Client;
+
+// Twilio credentials
+$sid = 'AC58cbd1b072d11bedae1012d2efd96f40';
+$token = 'a74bb2a926c3a6c28184f7d599f49fde';
+$twilio_number = '+19388677884';
+
+// Create a Twilio client
+$client = new Client($sid, $token);
+
+function sendSMS($to, $message) {
+    global $client, $twilio_number;
+
+    try {
+        $client->messages->create(
+            $to,
+            [
+                'from' => $twilio_number,
+                'body' => $message
+            ]
+        );
+        return true;
+    } catch (Exception $e) {
+        error_log('Error sending SMS: ' . $e->getMessage());
+        return false;
+    }
+}
+
+
+// Check if user is logged in and has the coordinator role
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'coordinator') {
+    header('Location: login_form.php');
+    exit();
+}
+
+$coordinator_id = $_SESSION['user_id'];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Retrieve form data
+    $username = trim($_POST['username']);
+    $password = trim($_POST['password']);
+    $phone_number = trim($_POST['phone_number']);
+
+    // Validate input
+    if (empty($username) || empty($password) || empty($phone_number)) {
+        echo '<p>Please fill in all fields.</p>';
+    } else {
+        // Hash the password
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+        // Prepare and execute the SQL statement
+        $stmt = $conn->prepare("INSERT INTO users (username, password, role, added_by_coordinator_id, phone) VALUES (?, ?, 'supervisor', ?, ?)");
+        $stmt->bind_param('ssii', $username, $hashed_password, $coordinator_id, $phone_number);
+
+        if ($stmt->execute()) {
+            // Prepare the SMS message
+            $message = "Hello $username, you have been added as a supervisor and your login password is $password. Welcome!";
+
+            // Send SMS
+            if (sendSMS($phone_number, $message)) {
+                echo '<p>Supervisor added and SMS sent successfully.</p>';
+            } else {
+                echo '<p>Supervisor added but failed to send SMS.</p>';
+            }
+        } else {
+            echo '<p>Failed to add supervisor: ' . $stmt->error . '</p>';
+        }
+
+        $stmt->close();
+    }
+}
+?>

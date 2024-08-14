@@ -31,7 +31,6 @@ function sendSMS($to, $message) {
     }
 }
 
-
 // Check if user is logged in and has the coordinator role
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'coordinator') {
     header('Location: login_form.php');
@@ -75,7 +74,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -247,9 +245,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
         <h1>Add Supervisor</h1>
         <form method="POST" action="add_supervisor.php">
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required>
-            <br>
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required>
             <br>
@@ -262,5 +257,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit">Add Supervisor</button>
         </form>
     </div>
+
+    <!-- <a href="supervisors.php" class="btn-back">
+        <i class="fas fa-chevron-left"></i> Back
+    </a> -->
 </body>
 </html>
