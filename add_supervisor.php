@@ -30,35 +30,28 @@ function sendSMS($to, $message) {
         return false;
     }
 }
-
-// Check if user is logged in and has the coordinator role
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'coordinator') {
-    header('Location: login_form.php');
-    exit();
-}
-
-$coordinator_id = $_SESSION['user_id'];
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Retrieve form data
+    $name = trim($_POST['name']);
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
     $phone_number = trim($_POST['phone_number']);
 
     // Validate input
-    if (empty($username) || empty($password) || empty($phone_number)) {
+    if (empty($name) || empty($username) || empty($password) || empty($phone_number)) {
         echo '<p>Please fill in all fields.</p>';
     } else {
-        // Hash the passwordd
+        // Hash the password
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
         // Prepare and execute the SQL statement
-        $stmt = $conn->prepare("INSERT INTO users (username, password, role, added_by_coordinator_id, phone) VALUES (?, ?, 'supervisor', ?, ?)");
-        $stmt->bind_param('ssii', $username, $hashed_password, $coordinator_id, $phone_number);
+        $stmt = $conn->prepare("INSERT INTO users (name, username, password, role, added_by_coordinator_id, phone) VALUES (?, ?, ?, 'supervisor', ?, ?)");
+        // Use 'sssis' for the types: 's' for string, 'i' for integer
+        $stmt->bind_param('sssii', $name, $username, $hashed_password, $coordinator_id, $phone_number);
 
         if ($stmt->execute()) {
             // Prepare the SMS message
-            $message = "Hello $username, you have been added as a supervisor and your login password is $password. Welcome!";
+            $message = "Hello $name, you have been added as a supervisor and your login password is $password. Welcome!";
 
             // Send SMS
             if (sendSMS($phone_number, $message)) {
@@ -73,8 +66,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
 }
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 ?>
 
 <!DOCTYPE html>
@@ -247,6 +238,9 @@ ini_set('display_errors', 1);
     <div class="container">
         <h1>Add Supervisor</h1>
         <form method="POST" action="add_supervisor.php">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+            <br>
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required>
             <br>
@@ -257,11 +251,7 @@ ini_set('display_errors', 1);
             <input type="text" id="phone_number" name="phone_number" required>
             <br>
             <button type="submit">Add Supervisor</button>
-        </form>
+    </form>
     </div>
-
-    <!-- <a href="supervisors.php" class="btn-back">
-        <i class="fas fa-chevron-left"></i> Back
-    </a> -->
 </body>
 </html>
