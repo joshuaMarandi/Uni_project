@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($username) || empty($password) || empty($phone_number)) {
         echo '<p>Please fill in all fields.</p>';
     } else {
-        // Hash the password
+        // Hash the passwordd
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
         // Prepare and execute the SQL statement
